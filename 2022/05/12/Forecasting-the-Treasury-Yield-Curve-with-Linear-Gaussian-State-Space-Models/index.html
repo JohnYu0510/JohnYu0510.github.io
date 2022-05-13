@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"johnyu0510.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.11.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="In this paper I constructed a linear Gaussian state space model to capture the movements of interest rates following the Dynamic Nelson-Siegel framework. I showed that the EM algorithm can provide mor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Forecasting the Treasury Yield Curve with Linear Gaussian State Space Models">
+<meta property="og:url" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/index.html">
+<meta property="og:site_name" content="Jinyuan (John) Yu">
+<meta property="og:description" content="In this paper I constructed a linear Gaussian state space model to capture the movements of interest rates following the Dynamic Nelson-Siegel framework. I showed that the EM algorithm can provide mor">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/yield_curve.png">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/pca_loading.png">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/dns_loading.png">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo01.png">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo02.png">
+<meta property="og:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo03.png">
+<meta property="article:published_time" content="2022-05-13T01:41:25.000Z">
+<meta property="article:modified_time" content="2022-05-13T07:10:22.737Z">
+<meta property="article:author" content="Jinyuan (John) Yu">
+<meta property="article:tag" content="Fixed-Income">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/yield_curve.png">
+
+
+<link rel="canonical" href="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/","path":"2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/","title":"Forecasting the Treasury Yield Curve with Linear Gaussian State Space Models"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Forecasting the Treasury Yield Curve with Linear Gaussian State Space Models | Jinyuan (John) Yu</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Jinyuan (John) Yu</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Personal Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-resume"><a href="/resume" rel="section"><i class="fa fa-file fa-fw"></i>Resume</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Yield-Curve-Model"><span class="nav-number">2.</span> <span class="nav-text">The Yield Curve Model</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dynamic-Nelson-Siegel-Model"><span class="nav-number">2.1.</span> <span class="nav-text">Dynamic Nelson-Siegel Model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model-Interpretation"><span class="nav-number">2.2.</span> <span class="nav-text">Model Interpretation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Model-Estimation"><span class="nav-number">3.</span> <span class="nav-text">Model Estimation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Diebold-Li-Two-Step-Regression"><span class="nav-number">3.1.</span> <span class="nav-text">Diebold-Li Two-Step Regression</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Filtering-and-Smoothing"><span class="nav-number">3.2.</span> <span class="nav-text">Filtering and Smoothing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EM-algorithm-Estimation"><span class="nav-number">3.3.</span> <span class="nav-text">EM algorithm Estimation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Simulation-Tests"><span class="nav-number">4.</span> <span class="nav-text">Simulation Tests</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Parameters-for-Simulation"><span class="nav-number">4.1.</span> <span class="nav-text">Parameters for Simulation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Estimation-Results"><span class="nav-number">4.2.</span> <span class="nav-text">Estimation Results</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Empirical-Results"><span class="nav-number">5.</span> <span class="nav-text">Empirical Results</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Data"><span class="nav-number">5.1.</span> <span class="nav-text">Data</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Forecast-Error-Analysis"><span class="nav-number">5.2.</span> <span class="nav-text">Forecast Error Analysis</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">6.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jinyuan (John) Yu"
+      src="/images/005.jpg#/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jinyuan (John) Yu</p>
+  <div class="site-description" itemprop="description">Cornell MFE Student</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JohnYu0510" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JohnYu0510" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:jy478@cornell.edu" title="E-Mail → mailto:jy478@cornell.edu" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.linkedin.com/in/jinyuan-yu" title="Linkedin → https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;jinyuan-yu" rel="noopener" target="_blank"><i class="fab fa_linkedin fa-fw"></i>Linkedin</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://johnyu0510.github.io/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/005.jpg#/images/avatar.gif">
+      <meta itemprop="name" content="Jinyuan (John) Yu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jinyuan (John) Yu">
+      <meta itemprop="description" content="Cornell MFE Student">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Forecasting the Treasury Yield Curve with Linear Gaussian State Space Models | Jinyuan (John) Yu">
+      <meta itemprop="description" content="In this paper I constructed a linear Gaussian state space model to capture the movements of interest rates following the Dynamic Nelson-Siegel framework. I showed that the EM algorithm can provide more accurate estimates. The algorithm works well in predicting the out-of-sample data.">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Forecasting the Treasury Yield Curve with Linear Gaussian State Space Models
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2022-05-12 21:41:25" itemprop="dateCreated datePublished" datetime="2022-05-12T21:41:25-04:00">2022-05-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-05-13 03:10:22" itemprop="dateModified" datetime="2022-05-13T03:10:22-04:00">2022-05-13</time>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">In this paper I constructed a linear Gaussian state space model to capture the movements of interest rates following the Dynamic Nelson-Siegel framework. I showed that the EM algorithm can provide more accurate estimates. The algorithm works well in predicting the out-of-sample data.</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>In this paper I constructed a linear Gaussian state space model to capture the movements of interest rates following the Dynamic Nelson-Siegel framework. I showed that the EM algorithm can provide more accurate estimates. The algorithm works well in predicting the out-of-sample data.</p>
+<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>Yield curves are the lines that plot yields (interest rates) of bonds having equal credit quality but differing maturity dates. This relationship between bond yields and maturities is also called the “term structure” in finance. It is a research tool widely used by portfolio managers to value fixed-income assets, manage risk exposures and make investment decisions.</p>
+<p>Figure 1 shows an example of the yield curve of treasury securities in May, 2022. At any time, dozens of different yields may be observed, corresponding to different bond maturities. But yield curves evolve dynamically; hence they have not only a cross-sectional, but also a temporal, dimension. This brings  challenges for accurately modeling how yields behave across different maturities over time.</p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/yield_curve.png"></p>
+<p>The basic idea is to build multivariate models for sets of bond yields. Fortunately, financial economic theories and empirical studies showed that financial asset returns typically conform to a certain type of restricted vector auto-regression, displaying factor structure, which refers to that observed high-dimensional object is driven by an underlying lower-dimensional set of objects, “factors”. Based on these, many factor models were proposed to explain the dynamics of interest rates, and in this project we mainly consider the Dynamic Nelson-Siegel model developed by Diebold and Li (2006).</p>
+<h2 id="The-Yield-Curve-Model"><a href="#The-Yield-Curve-Model" class="headerlink" title="The Yield Curve Model"></a>The Yield Curve Model</h2><h3 id="Dynamic-Nelson-Siegel-Model"><a href="#Dynamic-Nelson-Siegel-Model" class="headerlink" title="Dynamic Nelson-Siegel Model"></a>Dynamic Nelson-Siegel Model</h3><p>The term structure of interest rates can take on a variety of shapes such as monotonically<br>increasing or decreasing, humped and inverted humped. A parsimonious yield curve<br>expression that is able to capture all these different shapes is the function proposed by<br>Nelson and Siegel (1987). This function is, in turn, modified by Diebold and Li (2006)<br>to allow for time-varying factors resulting in the expression:<br>$$<br>\begin{equation*}<br>    y_t(\tau)&#x3D;L_{t}+\frac{1-e^{-\lambda \tau}}{\lambda\tau}S_{t}+(\frac{1-e^{-\lambda \tau}}{\lambda\tau}-e^{-\lambda \tau})C_{t}+\varepsilon_t(\tau)<br>\end{equation*}<br>$$<br>where $y(\tau)$ denotes the interest rate (yield to maturity) of a treasury bond with maturity $\tau$. $L_t$, $S_t$ and $C_t$ denote the level, slope and curvature changes in the yield curve. These three variables are also called “factors” that characterize the interest rates movements. $\lambda$ is the parameter to define the shape of the factor loading. Although in some papers people can estimate it as an unknown parameter (and may even evolve over time), we only consider it as a known constant $\lambda&#x3D;0.0609$ to presume the factor loading shapes for simplicity.  </p>
+<p>The dynamics of the factors can be modeled with a vector auto-regression form. Thus, we can rewrite the model with a linear Gaussian state space representation:<br>$$<br>\begin{align*}<br> y_t&amp;&#x3D;F x_t+\epsilon_t,\epsilon_t\sim N(0,R)\\<br>x_{t+1}&amp;&#x3D;Ax_t+b+w_t \epsilon_t\sim N(0,Q)<br>\end{align*}<br>$$<br>where the variables are:<br>$$<br>\begin{equation*}<br>    y_{t} &#x3D;\left(<br>    \begin{array}{c}<br>        y_t(\tau_1)\\y_t(\tau_2)\\…\\y_t(\tau_N)<br>    \end{array}<br>    \right),x_t&#x3D;\left(<br>    \begin{array}{c}<br>        L_t\\S_t\\C_t<br>    \end{array}<br>    \right)<br>\end{equation*}<br>$$<br>and the parameter matrix is:<br>$$<br>\begin{equation*}<br>    F &#x3D;\left(<br>    \begin{array}{ccc}<br>        1&amp;\frac{1-e^{-\tau_1\lambda}}{\tau_1 \lambda}&amp;\frac{1-e^{-\tau_1\lambda}}{\tau_1 \lambda}-e^{-\tau_1\lambda}\\<br>        1&amp;\frac{1-e^{-\tau_2\lambda}}{\tau_2 \lambda}&amp;\frac{1-e^{-\tau_2\lambda}}{\tau_2 \lambda}-e^{-\tau_2\lambda}\\<br>        …&amp;…&amp;…\\<br>        1&amp;\frac{1-e^{-\tau_N\lambda}}{\tau_N \lambda}&amp;\frac{1-e^{-\tau_N\lambda}}{\tau_N \lambda}-e^{-\tau_N\lambda}\\<br>    \end{array}<br>    \right)<br>\end{equation*}<br>$$</p>
+<p>$$<br>\begin{equation*}<br>    A &#x3D;\left(<br>    \begin{array}{ccc}<br>        a_{11}&amp;a_{12}&amp;a_{13}\\a_{21}&amp;a_{22}&amp;a_{23}\\a_{31}&amp;a_{32}&amp;a_{33}<br>    \end{array}<br>    \right)<br>    b&#x3D;\left(<br>    \begin{array}{c}<br>        b_L\\b_S\\b_C<br>    \end{array}<br>    \right)<br>\end{equation*}<br>$$</p>
+<h3 id="Model-Interpretation"><a href="#Model-Interpretation" class="headerlink" title="Model Interpretation"></a>Model Interpretation</h3><p>In the above model, a factor structure is chosen to summarize the price information for bonds for two reasons: On one hand, empirical research has shown that only a small number of systematic risks appears to underlie the interest rates,  which means employing such factor structure is enough to explain the market and thus consistent with the parsimony principle. On the other hand, it effectively collapses an intractable high-dimensional modeling situation into a tractable low-dimensional situation, which makes it appealing for statistical reasons.</p>
+<p>The factor loading forms seems rather arbitrary, but in fact it not only has desirable mathematical properties for financial economic theories, but also turns out to characterize the market successfully in empirical studies. To show it, I plotted the factor loading of the top three principal components extracted from history interest rates data and compared it with the factor loading in the model above. In Figure 2 and 3 we can find that the shapes of loading across different maturities are quite similar. This indicates that the factors $L_t,S_t,C_t$ are likely to explain for a large partition of variance in the interest rates movements. </p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/pca_loading.png"></p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/dns_loading.png"></p>
+<p>According to the factor loading, the economic interpretations of these three factors are obvious:</p>
+<ol>
+<li><strong>The Level Factor</strong>: A unit of increase in the level factor $L_t$ will increase all interest rates with different maturities by approximately the same level, which should be linked to the increase of expected inflation in macroeconomic fundamentals. </li>
+<li><strong>The Slope Factor</strong>:  The movements of the slope factor $S_t$ will change the short-term and long-term rates in different directions, which is usually related to the monetary policy when the central bank is changing the short-term rates via open market operations, or the prospect of the real activities in the economy.</li>
+<li><strong>The Curvature Factor</strong>: Some argues that the curvature factor $C_t$ may indicate the volatility of the level factor, but it’s more like a parametric tool to make the model more flexible and thus it can be better adapted to real-world data.</li>
+</ol>
+<h2 id="Model-Estimation"><a href="#Model-Estimation" class="headerlink" title="Model Estimation"></a>Model Estimation</h2><p>In this section I first introduce the traditional regression method for model estimation. Then I show how to estimate the linear Gaussian state space model with the Expectation Maximization (EM) algorithm.</p>
+<h3 id="Diebold-Li-Two-Step-Regression"><a href="#Diebold-Li-Two-Step-Regression" class="headerlink" title="Diebold-Li Two-Step Regression"></a>Diebold-Li Two-Step Regression</h3><p>As the factor loading $F$ in the measurement equation is known to us (if we fix $\lambda$), the most intuitive approach is to use least squares to derive parameters. This simple approach is first introduced by Diebold and Li (2006).</p>
+<p>For $t&#x3D;1,..,T$, we first utilize least squares method to estimate the following regression model of $y_t$ on $F$:<br>$$<br>\begin{equation*}<br>    y_t &#x3D; F x_t+\epsilon_t<br>\end{equation*}<br>$$<br>This yields a three-dimensional time-series of $\hat{x}_t$, and a corresponding series of residuals $\hat{\epsilon}_t(\tau)$. The sample covariance of $\hat{\epsilon}_t(\tau)$ is taken as the estimate of $R$.</p>
+<p>Next, in step 2, a dynamic model is fitted to $\hat{x}$ . An obvious choice is a vector auto-regression, but there<br>are many possible variations:<br>$$<br>\begin{equation*}<br>    x_{t+1}&#x3D;Ax_t+b+w_t<br>\end{equation*}<br>$$<br>This step yields estimates of dynamic parameters governing the evolution of the yield factors, as well as estimates of the factor innovations: $\hat{A},\hat{b},\hat{Q}$.</p>
+<p>The benefits of two-step estimation (relative to one-step estimation discussed below) are its simplicity, convenience, and numerical stability.The cost of two-step estimation is its possible statistical biased,as the first-step parameter estimation error is ignored in the second step, which may distort second-step inference.</p>
+<h3 id="Filtering-and-Smoothing"><a href="#Filtering-and-Smoothing" class="headerlink" title="Filtering and Smoothing"></a>Filtering and Smoothing</h3><p>Before I move forward to the estimation procedure, I will briefly discuss the techniques for estimating underlying states in linear Gaussian state space models. This will be essentially helpful in the EM algorithm.</p>
+<p>Suppose we already know all the parameters within the linear state space model. Our aim is to derive the conditional distribution of $x_t$ given information of $y_{1:t-1}$ (forecasting), $y_{1:t}$ (filtering), or $y_{1:T}$ (smoothing). For filtering and forecasting, the Kalman filter can be applied to derive the posterior distribution of underlying states (factors) recursively in the model. The algorithm is described as follow:</p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo01.png"></p>
+<p>One may also be interested in inference regarding a previous hidden state, that is, in calculating $p(x_t|y_{0:T})$. Here the Rausch-Tung-Streibel (RTS) smoother can be applied to compute the inferential quantity via a backward recursion.</p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo02.png"></p>
+<h3 id="EM-algorithm-Estimation"><a href="#EM-algorithm-Estimation" class="headerlink" title="EM algorithm Estimation"></a>EM algorithm Estimation</h3><p>Now that we have known how to conduct inference in linear Gaussian state space models for known parameters, we turn to the question of estimating those parameters.Unfortunately, there are no closed-form MLEs for the model. Existing literature either used the QMLE or the two-step regression procedure I mentioned above. Here we apply the EM algorithm to solve this problem.</p>
+<p>For unknown parameters $\theta&#x3D;{F,R,A,Q,b}$, the EM algorithm can summarized as:</p>
+<p><img src="/2022/05/12/Forecasting-the-Treasury-Yield-Curve-with-Linear-Gaussian-State-Space-Models/algo03.png"></p>
+<p>For the linear Gaussian state space model, the likelihood function can be derived as:<br>$$<br>\begin{align*}<br>    -2lnL &#x3D; &amp; ln|H_1|+(x_1-g_1)’H_1^{-1}(x_1-g_1)+(T-1)ln|Q|\\<br>    &amp; +tr(Q^{-1}M)+Tln|R|+tr(R^{-1}N)+const<br>\end{align*}<br>$$<br>where $M,N$ follows:<br>$$<br>\begin{align*}<br>    M&amp;&#x3D;\sum_{t&#x3D;1}^{T-1}(x_{t+1}-Ax_t-b)’Q^{-1}(x_{t+1}-Ax_t-b)\\N&amp;&#x3D;\sum_{t&#x3D;1}^{T}(y_t-Fx_t)’R^{-1}(y_t-Fx_t)<br>\end{align*}<br>$$<br>Then the computation of the E-step only requires $E(x_t |y_{1:N}),E(x_t x_t’|y_{1:N}),E(x_t x_{t+1}’|y_{1:N})$, which can all be derived via the Kalman filter and RTS smoother mentioned above. Based on these, one can take the first order derivative of $Q(\theta,\theta_i)$ to derive the optimal value for each parameter in each step in iteration. The initialization of the estimates can be generated via the two-step regression.</p>
+<h2 id="Simulation-Tests"><a href="#Simulation-Tests" class="headerlink" title="Simulation Tests"></a>Simulation Tests</h2><p>In this section I compare the performance of two-step regression and EM on a simulated date set.</p>
+<h3 id="Parameters-for-Simulation"><a href="#Parameters-for-Simulation" class="headerlink" title="Parameters for Simulation"></a>Parameters for Simulation</h3><p>Consider a yield curve with 8 different maturities: 3,6,12,24,36,60,84,120 (months). I chose a set of parameters to simulate samples of $y_t$ in  my numerical example:<br>$$<br>\begin{equation*}<br>    A &#x3D;\left(<br>    \begin{array}{ccc}<br>        0.99&amp;0.03&amp;-0.02\\-0.03&amp;0.94&amp;0.04\\0.03&amp;0.02&amp;0.94<br>    \end{array}<br>    \right)<br>    b&#x3D;\left(<br>    \begin{array}{c}<br>        0.11\\0.17\\-0.28<br>    \end{array}<br>    \right)<br>\end{equation*}<br>$$</p>
+<p>$$<br>\begin{equation*}<br>    Q &#x3D;\left(<br>    \begin{array}{ccc}<br>        0.09&amp;-0.01&amp;0.04\\-0.01&amp;0.38&amp;0.01\\0.04&amp;0.01&amp;0.8<br>    \end{array}<br>    \right)<br>    g_1&#x3D;\left(<br>    \begin{array}{c}<br>        8.02\\-1.14\\-0.42<br>    \end{array}<br>    \right)<br>\end{equation*}<br>$$</p>
+<p>$$<br>\begin{equation*}<br>    R &#x3D; diag[0.3,0.1,0.1,0.1,0.1,0.1,0.1,0.2]^2,H_1&#x3D;Q<br>\end{equation*}<br>$$</p>
+<p>All the parameters here were calibrated from real-world data. We simulate samples for $T&#x3D;360$ monthly observations.</p>
+<h3 id="Estimation-Results"><a href="#Estimation-Results" class="headerlink" title="Estimation Results"></a>Estimation Results</h3><p>We compute the Frobenius norm of the difference between the estimated parameters and true parameters for different estimation procedures: two-step regression and EM algorithm. For the EM algorithm, we set $M&#x3D;60$ for the maximum step of iteration.</p>
+<p>(Table1)</p>
+<p>As is shown in TABLE 1, the EM algorithm generally yield a robust estimate of the true parameters, while the two-step regression tends to make larger estimation errors.</p>
+<h2 id="Empirical-Results"><a href="#Empirical-Results" class="headerlink" title="Empirical Results"></a>Empirical Results</h2><p>In this section I applied the model to fit real-world interest rates data and showed the forecast results of the model.</p>
+<h3 id="Data"><a href="#Data" class="headerlink" title="Data"></a>Data</h3><p>In our empirical application we consider U.S. Treasury zero-coupon bond yields for eight maturities similar to the simulation setting. The yields are obtained from the H.15 series of the Federal Reserve Board, where we take the end-of-the-month yield observations, starting from December 1984 up to April 2022, resulting in 449 monthly observations. The data before 1984 were discarded to avoid the structural change of the model due to the end of stagflation.</p>
+<h3 id="Forecast-Error-Analysis"><a href="#Forecast-Error-Analysis" class="headerlink" title="Forecast Error Analysis"></a>Forecast Error Analysis</h3><p>The model is tested via a rolling-window estimation approach. At the end of each month, we aim to estimate the yield curve after 6 months from now, and the training set for estimating the model parameters include the recent 360 data points. This iteration will generate time series for different maturities, and we compute the root mean square error (RMSE) as the error metric.</p>
+<p>An alternative way to forecast the yield curve to be compared is the vector auto-regression approach for the yields. This can generate comparatively accurate forecasts as yields of all the maturities are put into the regression model. However, it can hardly be applied in real-world investment because the larger number of maturities will significantly increase the difficulty for its estimation, and also the model cannot provide any insights in macroeconomic analysis and risk management. </p>
+<p>TABLE 2 displays the forecast errors measured by RMSE for different maturities. The linear Gaussian state space model performs generally well for most short-maturity yields, but didn’t outperform the VAR model for long maturities. However, state space models require much fewer parameters (54) than the VAR model (108), and they are usually have more interpretation. Even with a simpler model structure, the state space model can still generate forecast almost equivalently accurate as the more complex model, and in many cases even performs better.</p>
+<p>(Table2)</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>In this project I developed a linear Gaussian state space model for yield curves following the Dynamic Nelson-Siegel framework. My results showed that the EM algorithm for parameters estimation in this model dominates the traditional two-step regression in terms of making more accurate estimates for parameters in simulation tests. Furthermore, I provided empirical evidence that the model can be successfully applied to fit real-world interest rates data and get good out-of-sample performance.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Fixed-Income/" rel="tag"># Fixed-Income</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/05/12/Estimating-Factor-Models-with-Hierarchical-Bayes/" rel="prev" title="Estimating Factor Models with Hierarchical Bayes">
+                  <i class="fa fa-chevron-left"></i> Estimating Factor Models with Hierarchical Bayes
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/05/13/Estimating-Factor-Models-under-Price-Limits/" rel="next" title="Estimating Factor Models under Price Limits">
+                  Estimating Factor Models under Price Limits <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jinyuan (John) Yu</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+  <script class="next-config" data-name="pdf" type="application/json">{"object_url":{"url":"https://cdn.jsdelivr.net/npm/pdfobject@2.2.7/pdfobject.min.js","integrity":"sha256-ph3Dk89VmuTVXG6x/RDzk53SU9LPdAh1tpv0UvnDZ2I="},"url":"/lib/pdf/web/viewer.html"}</script>
+  <script src="/js/third-party/tags/pdf.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+
+</body>
+</html>
